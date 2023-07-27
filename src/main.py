@@ -29,17 +29,19 @@ if __name__ == "__main__":
                     profile_uuid = profile_response_data['profile']['uuid']
                     logger.info(profile_response_data['profile']['uuid'])
                     logger.info("Response data:" + profile_response_data['profile']['uuid'])
-                    json_response = HTTPClient("http://127.0.0.1:35000/api/v1/profile") \
-                        .get(f"start?automation=true&profileId={profile_response_data['profile']['uuid']}")
-                    parent_remote_url = json_response['value']
+                    json_response = HTTPClient("http://127.0.0.1:35000/api/v1/profile/start") \
+                        .get(endpoint="",params={"automation":True,"profileId":profile_response_data['profile']['uuid']})
+                    logger.info(json_response.json())
+                    parent_remote_url = json_response.json()['value']
                 else:
                     logger.info("Request failed with status code:" + response.status_code)
 
             except requests.exceptions.RequestException as e:
-                logger.info("Request error:")
+                logger.info(e)
 
             thread = executor.submit(family_automation, parent_name,profile_uuid, parent_remote_url,  logger)
             family_threads.append(thread)
 
     # Wait for all family threads to finish
     concurrent.futures.wait(family_threads)
+

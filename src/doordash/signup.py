@@ -57,7 +57,7 @@ def start_parent_signup(env, driver: webdriver,profile_uuid, logger: Logger):
         time.sleep(0.5)
         inputPhone = driver.find_element(By.XPATH, "//input[@data-anchor-id='IdentitySignupPhoneField']")
         time.sleep(0.3)
-        for char in user['phoneNumber']:
+        for char in user['phone']:
             inputPhone.send_keys(char)
             time.sleep(0.5)
         time.sleep(0.5)
@@ -74,6 +74,8 @@ def start_parent_signup(env, driver: webdriver,profile_uuid, logger: Logger):
     time.sleep(4)
 
     driver.switch_to.default_content()
+
+    time.sleep(15)
 
     driver.get("https://www.doordash.com/restaurants-near-me/")
 
@@ -99,7 +101,13 @@ def start_parent_signup(env, driver: webdriver,profile_uuid, logger: Logger):
     except:
         logger.info("Suggestion Popup not found")
 
-    time.sleep(10)
+    try:
+            signInButton = driver.find_element(By.XPATH, '//span[text()="Sign In"]')
+            signInButton.click()
+    except:
+        logger.info("signIn button not found")
+
+    time.sleep(20)
 
     verify_phone(env, driver, logger, user)
 

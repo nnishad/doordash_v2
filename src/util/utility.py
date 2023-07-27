@@ -94,7 +94,7 @@ def fetch_otp_details(environment, logger: Logger, user):
         try:
             time.sleep(60)
             response = HTTPClient(environment['sms_pool_fetch_api']) \
-                .get(endpoint="", params={"orderid": user['orderId'], "key": environment['key']})
+                .get(endpoint="", params={"orderid": user['smsPoolOrderId'], "key": environment['key']})
             logger.info(response)
             if response.status_code == 200:
                 json_data = response.json()
