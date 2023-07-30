@@ -7,8 +7,7 @@ import threading
 import time
 import requests as requests
 
-
-from src.doordash.signup import start_parent_signup
+from src.doordash.signup import start_parent_signup, start_child_signup
 from src.util.custom_logger import Logger
 from src.util.http_client import HTTPClient
 from src.util.webdriver_manager import WebDriverManager
@@ -24,22 +23,22 @@ env = config[input_environment]
 
 
 # @log_function_execution(CustomLogger("ChildAutomation"))
-def child_automation(parent_name, child_name, remote_url=None, logger=None):
+def child_automation(profile_uuid, referral_link, family_id, child_name, remote_url=None, logger=None):
     if not logger:
         logger = Logger()
     manager = WebDriverManager(threading.get_ident(), remote_url)
     driver = manager.get_driver()
 
-    logger.info(f"Child log for {child_name}")
+    logger.info(f"Child log for {child_name} from family {family_id}")
 
-    driver.get("https://google.com")
+    start_child_signup(env, driver, profile_uuid, referral_link, family_id, logger)
     # ...
     time.sleep(10)
     manager.close_driver()
 
 
 # @log_function_execution(CustomLogger("FamilyAutomation"))
-def family_automation(parent_name,profile_uuid, remote_url=None, logger=None):
+def family_automation(parent_name, profile_uuid, remote_url=None, logger=None):
     if not logger:
         logger = Logger()
 
@@ -48,7 +47,7 @@ def family_automation(parent_name,profile_uuid, remote_url=None, logger=None):
 
     logger.info(f"Parent log for {parent_name}")
 
-    start_parent_signup(env, driver,profile_uuid, logger)
+    referral_link, family_id = start_parent_signup(env, driver, profile_uuid, logger)
 
     manager.close_driver()
 
@@ -66,7 +65,8 @@ def family_automation(parent_name,profile_uuid, remote_url=None, logger=None):
                     logger.info(profile_response_data['profile']['uuid'])
                     logger.info("Response data:" + profile_response_data['profile']['uuid'])
                     json_response = HTTPClient("http://127.0.0.1:35000/api/v1/profile/start") \
-                        .get(endpoint="",params={"automation":True,"profileId":profile_response_data['profile']['uuid']})
+                        .get(endpoint="",
+                             params={"automation": True, "profileId": profile_response_data['profile']['uuid']})
                     logger.info(json_response.json())
                     child_remote_url = json_response.json()['value']
                 else:
@@ -74,7 +74,7 @@ def family_automation(parent_name,profile_uuid, remote_url=None, logger=None):
 
             except requests.exceptions.RequestException as e:
                 logger.info(e)
-            child_task = executor.submit(child_automation, profile_uuid, child_name, child_remote_url, logger)
+            child_task = executor.submit(child_automation, profile_uuid, referral_link, family_id, child_name, child_remote_url, logger)
             child_tasks.append(child_task)
 
         # Wait for all child tasks to complete

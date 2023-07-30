@@ -39,7 +39,7 @@ def get_user_information(profile_uuid, environment, logger: Logger):
         'password': Faker().password(length=12),
         'name': profile['name'],
         'address': generate_us_city_address(""),
-        "multiLoginProfileId":profile_uuid
+        "multiLoginProfileId": profile_uuid
     }
 
     for element in sms_pool_services.ServiceList().get_services():
@@ -167,6 +167,20 @@ def save_parent_account(user, logger: Logger):
     logger.info(user)
     response = HTTPClient("http://localhost:3001").post("family/create", json=user)
     if response.status_code == 201:
-        logger.info(response.json())
+        json_response = response.json()
+        logger.info(json_response)
+        return json_response['family']['id']
     else:
         logger.info(response)
+        return None
+
+
+def save_child_account(user, family_id, logger: Logger):
+    logger.info(user)
+    response = HTTPClient("http://localhost:3001").post(f"family/update/{family_id}/children", json=user)
+    if response.status_code == 201:
+        json_response = response.json()
+        logger.info(json_response)
+    else:
+        logger.info(response)
+        return None
