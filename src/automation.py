@@ -49,8 +49,13 @@ def family_automation(parent_name, profile_uuid, remote_url=None, logger=None):
 
     referral_link, family_id = start_parent_signup(env, driver, profile_uuid, logger)
 
-    manager.close_driver()
+    try:
+        manager.close_driver()
+    except:
+        logger.error("Error while closing session")
 
+    HTTPClient("http://127.0.0.1:35000") \
+        .get(endpoint="api/v1/profile/stop", params={"profileId": profile_uuid})
     # Execute child tasks in parallel using ThreadPoolExecutor
     num_children = random.randint(0, 1)
     with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -74,7 +79,8 @@ def family_automation(parent_name, profile_uuid, remote_url=None, logger=None):
 
             except requests.exceptions.RequestException as e:
                 logger.info(e)
-            child_task = executor.submit(child_automation, profile_uuid, referral_link, family_id, child_name, child_remote_url, logger)
+            child_task = executor.submit(child_automation, profile_uuid, referral_link, family_id, child_name,
+                                         child_remote_url, logger)
             child_tasks.append(child_task)
 
         # Wait for all child tasks to complete
