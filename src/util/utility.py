@@ -165,7 +165,7 @@ def get_referral_link(driver, logger: Logger):
 
 def save_parent_account(user, logger: Logger):
     logger.info(user)
-    response = HTTPClient("http://localhost:30001").post("family/create", json=user)
+    response = HTTPClient("http://localhost:3001").post("family/create", json=user)
     if response.status_code == 201:
         logger.info(response.json())
     else:
