@@ -99,7 +99,11 @@ def start_parent_signup(env, driver: webdriver,profile_uuid, logger: Logger):
     try:
         driver.find_elements(By.XPATH,"//span[text()='Skip']")[0].click()
     except:
-        logger.info("Suggestion Popup not found")
+        logger.info("Suggestion Popup not found 1")
+        try:
+            driver.find_elements(By.XPATH,"//span[text()='Skip']")[1].click()
+        except:
+            logger.info("Suggestion Popup not found 1")
 
     try:
             signInButton = driver.find_element(By.XPATH, '//span[text()="Sign In"]')
