@@ -72,6 +72,5 @@ CANADIAN_CITIES = [
     "Charlottetown",
     "Whitehorse",
     "Yellowknife",
-    "Iqaluit",
     # Add more cities as needed...
 ]

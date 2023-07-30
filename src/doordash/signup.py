@@ -4,7 +4,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
 from src.util.custom_logger import Logger
-from src.util.utility import get_user_information, get_random_canadian_city, verify_phone, get_referral_link, \
+from src.util.utility import fetch_otp_details, get_user_information, get_random_canadian_city, verify_phone, get_referral_link, \
     save_parent_account, save_child_account
 
 
@@ -19,7 +19,7 @@ def start_parent_signup(env, driver: webdriver,profile_uuid, logger: Logger):
 
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 
-    time.sleep(4)
+    time.sleep(30)
 
     try:
         acceptAllButton = driver.find_element(By.XPATH, "//button[@id='cassie_accept_all_pre_banner']")
@@ -106,8 +106,8 @@ def start_parent_signup(env, driver: webdriver,profile_uuid, logger: Logger):
             logger.info("Suggestion Popup not found 1")
 
     try:
-            signInButton = driver.find_element(By.XPATH, '//span[text()="Sign In"]')
-            signInButton.click()
+        signInButton = driver.find_element(By.XPATH, '//span[text()="Sign In"]')
+        signInButton.click()
     except:
         logger.info("signIn button not found")
 
@@ -140,6 +140,8 @@ def start_child_signup(env, driver:webdriver, profile_uuid, referral_link, famil
         logger.info("Cookieee popup not found!")
 
     user = get_user_information(profile_uuid, environment=env,logger=logger)
+
+    time.sleep(20)
     try:
         inputFirstName = driver.find_element(By.XPATH, "//input[@data-anchor-id='IdentitySignupFirstNameField']")
         for char in user['firstName']:
@@ -174,7 +176,24 @@ def start_child_signup(env, driver:webdriver, profile_uuid, referral_link, famil
     time.sleep(0.7)
     signupButton = driver.find_element(By.XPATH, '//span[text()="Sign Up"]')
     signupButton.click()
-    time.sleep(4)
+    time.sleep(15)
+
+    status, otp_message = fetch_otp_details(env, logger, user)
+    otp_input = driver.find_element(By.XPATH, "//input[@type='number']")
+
+    if status == 3:
+        for char in otp_message:
+            otp_input.send_keys(char)
+            time.sleep(0.5)
+    else:
+        logger.info(f"SMS API returned status: {status}")
+        time.sleep(0.5)
+
+    otp_submit_btn = driver.find_element(By.XPATH, "//span[text() = 'Submit']")
+    otp_submit_btn.click()
+
+
+    time.sleep(15)
 
     driver.get("https://www.doordash.com/restaurants-near-me/")
 
@@ -210,10 +229,6 @@ def start_child_signup(env, driver:webdriver, profile_uuid, referral_link, famil
         logger.info("signIn button not found")
 
     time.sleep(20)
-
-    verify_phone(env, driver, logger, user)
-
-    time.sleep(10)
 
     referral_link = get_referral_link(driver,logger)
 

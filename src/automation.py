@@ -48,7 +48,6 @@ def family_automation(parent_name, profile_uuid, remote_url=None, logger=None):
     logger.info(f"Parent log for {parent_name}")
 
     referral_link, family_id = start_parent_signup(env, driver, profile_uuid, logger)
-
     try:
         manager.close_driver()
     except:
@@ -56,8 +55,13 @@ def family_automation(parent_name, profile_uuid, remote_url=None, logger=None):
 
     HTTPClient("http://127.0.0.1:35000") \
         .get(endpoint="api/v1/profile/stop", params={"profileId": profile_uuid})
+
+    logger.info(family_id)
+
+    # family_id="64c65e22c8dc8aef1a7962ed"
+    # referral_link="https://drd.sh/EKra12d5Snk6Qjba"
     # Execute child tasks in parallel using ThreadPoolExecutor
-    num_children = random.randint(0, 1)
+    num_children = random.randint(1, 5)
     with concurrent.futures.ThreadPoolExecutor() as executor:
         child_tasks = []
         for j in range(num_children):

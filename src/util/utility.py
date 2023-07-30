@@ -115,15 +115,15 @@ def verify_phone(environment, driver, logger: Logger, user):
     try:
         open_menu = driver.find_element(By.XPATH, "//button[@aria-label='Open Menu']")
         open_menu.click()
-        time.sleep(5)
+        time.sleep(8)
 
         account_btn = driver.find_element(By.XPATH, "//span[text() = 'Account']")
         account_btn.click()
 
-        time.sleep(3)
+        time.sleep(10)
         verify_btn = driver.find_element(By.XPATH, "//span[text() = 'Verify']")
         verify_btn.click()
-        time.sleep(5)
+        time.sleep(11)
 
         otp_input = driver.find_element(By.XPATH, "//input[@type='number']")
 
@@ -146,7 +146,7 @@ def get_referral_link(driver, logger: Logger):
     try:
         open_menu = driver.find_element(By.XPATH, "//button[@aria-label='Open Menu']")
         open_menu.click()
-        time.sleep(5)
+        time.sleep(8)
 
         menu_referral_link = driver.find_element(By.XPATH, "//span[contains(text(), 'Get ') and contains(text(), "
                                                            "' in Credits')]")
@@ -169,7 +169,7 @@ def save_parent_account(user, logger: Logger):
     if response.status_code == 201:
         json_response = response.json()
         logger.info(json_response)
-        return json_response['family']['id']
+        return json_response['family']['_id']
     else:
         logger.info(response)
         return None
