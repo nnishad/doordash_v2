@@ -11,6 +11,8 @@ from src.constant.cities import CANADIAN_CITIES
 from src.util.custom_logger import Logger
 from src.util.http_client import HTTPClient
 
+import requests
+
 fake = Faker(['en_US'])
 
 
@@ -112,34 +114,31 @@ def fetch_otp_details(environment, logger: Logger, user):
 
 
 def verify_phone(environment, driver, logger: Logger, user):
-    try:
-        open_menu = driver.find_element(By.XPATH, "//button[@aria-label='Open Menu']")
-        open_menu.click()
-        time.sleep(8)
+    open_menu = driver.find_element(By.XPATH, "//button[@aria-label='Open Menu']")
+    open_menu.click()
+    time.sleep(8)
 
-        account_btn = driver.find_element(By.XPATH, "//span[text() = 'Account']")
-        account_btn.click()
+    account_btn = driver.find_element(By.XPATH, "//span[text() = 'Account']")
+    account_btn.click()
 
-        time.sleep(10)
-        verify_btn = driver.find_element(By.XPATH, "//span[text() = 'Verify']")
-        verify_btn.click()
-        time.sleep(11)
+    time.sleep(10)
+    verify_btn = driver.find_element(By.XPATH, "//span[text() = 'Verify']")
+    verify_btn.click()
+    time.sleep(11)
 
-        otp_input = driver.find_element(By.XPATH, "//input[@type='number']")
+    otp_input = driver.find_element(By.XPATH, "//input[@type='number']")
 
-        status, otp_message = fetch_otp_details(environment, logger, user)
-        if status == 3:
-            for char in otp_message:
-                otp_input.send_keys(char)
-                time.sleep(0.5)
-        else:
-            logger.info(f"SMS API returned status: {status}")
-        time.sleep(0.5)
+    status, otp_message = fetch_otp_details(environment, logger, user)
+    if status == 3:
+        for char in otp_message:
+            otp_input.send_keys(char)
+            time.sleep(0.5)
+    else:
+        logger.info(f"SMS API returned status: {status}")
+    time.sleep(0.5)
 
-        otp_submit_btn = driver.find_element(By.XPATH, "//span[text() = 'Submit']")
-        otp_submit_btn.click()
-    except:
-        logger.info("Verify btn not found")
+    otp_submit_btn = driver.find_element(By.XPATH, "//span[text() = 'Submit']")
+    otp_submit_btn.click()
 
 
 def get_referral_link(driver, logger: Logger):
@@ -184,3 +183,62 @@ def save_child_account(user, family_id, logger: Logger):
     else:
         logger.info(response)
         return None
+
+
+def retry_api_call(api_func, logger: Logger, max_retries=3, retry_delay=5):
+    for retry_count in range(max_retries + 1):
+        try:
+            response = api_func()
+            if response.status_code == 200:
+                return response
+            else:
+                logger.info(f"API call failed with status code: {response.status_code}. Retrying...")
+                time.sleep(retry_delay)
+        except requests.exceptions.RequestException as e:
+            logger.info(f"Request error: {e}")
+            time.sleep(retry_delay)
+    return None
+
+
+def retry(max_retries, sleep_time):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            retries = 0
+            while retries < max_retries:
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    print(f"Exception occurred in {func.__name__}: {e}")
+                    print(f"Retrying {func.__name__} in {sleep_time} seconds...")
+                    time.sleep(sleep_time)
+                    retries += 1
+            else:
+                print(f"Max retries reached for {func.__name__}.")
+
+        return wrapper
+
+    return decorator
+
+
+def retry_on_exception(max_retries, sleep_time, steps):
+    results = []
+    for step_info in steps:
+        step_func, args, kwargs = step_info
+
+        retries = 0
+        while retries < max_retries:
+            try:
+                result = step_func(*args, **kwargs)
+                results.append(result)  # Collect the result
+                break  # Exit the loop if step is successful
+            except Exception as e:
+                print(f"Exception occurred in step {step_func.__name__}: {e}")
+                print(f"Retrying step {step_func.__name__} in {sleep_time} seconds...")
+                time.sleep(sleep_time)
+                retries += 1
+        else:
+            print(f"Max retries reached for step {step_func.__name__}.")
+            raise Exception(f"Failed to complete step {step_func.__name__} after {max_retries} retries.")
+
+    return results  # Return the list of results
+
